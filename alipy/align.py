@@ -4,7 +4,7 @@ import os
 import numpy as np
 import math
 import scipy.ndimage
-import pyfits
+from astropy.io import fits
 import csv
 
 
@@ -78,7 +78,7 @@ def shape(filepath, hdu=0, verbose=True):
     :param hdu: The hdu of the fits file that you want me to use. 0 is primary.
                 If multihdu, 1 is usually science.
     """
-    hdr = pyfits.getheader(filepath, hdu)
+    hdr = fits.getheader(filepath, hdu)
     if hdr["NAXIS"] != 2:
         raise RuntimeError("Hmm, this hdu is not a 2D image !")
     if verbose:
@@ -96,7 +96,7 @@ def fromfits(infilename, hdu=0, verbose=True):
     if verbose:
         print("Reading %s ..." % (os.path.basename(infilename)))
 
-    pixelarray, hdr = pyfits.getdata(infilename, hdu, header=True)
+    pixelarray, hdr = fits.getdata(infilename, hdu, header=True)
     pixelarray = np.asarray(pixelarray).transpose()
 
     pixelarrayshape = pixelarray.shape
@@ -132,9 +132,9 @@ def tofits(outfilename, pixelarray, hdr=None, verbose=True):
         os.remove(outfilename)
 
     if hdr is None:  # then a minimal header will be created
-        hdu = pyfits.PrimaryHDU(pixelarray.transpose())
+        hdu = fits.PrimaryHDU(pixelarray.transpose())
     else:  # this if else is probably not needed but anyway ...
-        hdu = pyfits.PrimaryHDU(pixelarray.transpose(), hdr)
+        hdu = fits.PrimaryHDU(pixelarray.transpose(), hdr)
 
     hdu.writeto(outfilename)
 
