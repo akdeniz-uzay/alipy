@@ -1,4 +1,5 @@
 from alipy import star
+from alipy import f2n
 # star not used?
 import os
 import numpy as np
@@ -56,11 +57,6 @@ def affineremap(filepath, transform, shape, alifilepath=None,
         tofits(alifilepath, data, hdr=None, verbose=verbose)
 
     if makepng:
-        try:
-            import f2n
-        except ImportError:
-            print("Couldn't import f2n -- install it !")
-            return
         myimage = f2n.f2nimage(numpyarray=data, verbose=False)
         myimage.setzscale("auto", "auto")
         myimage.makepilimage("log", negative=False)
@@ -296,11 +292,6 @@ def irafalign(filepath, uknstarlist, refstarlist, shape,
         os.remove(geodatabasepath)
 
     if makepng:
-        try:
-            import f2n
-        except ImportError:
-            print("Couldn't import f2n -- install it !")
-            return
         myimage = f2n.fromfits(alifilepath, verbose=False)
         myimage.setzscale("auto", "auto")
         myimage.makepilimage("log", negative=False)

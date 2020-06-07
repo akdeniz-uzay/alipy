@@ -2,7 +2,7 @@
 Overhaul of cosmouline's star module, for alipy2.
 This module contains stuff for geometric matching algorithms.
 """
-
+import astropy.table
 import sys
 import os
 import math
@@ -226,13 +226,13 @@ def readsexcat(sexcat, hdu=0, verbose=True,
                maxflag=3, posflux=True, minfwhm=2.0, propfields=[]):
     """
     sexcat is either a string (path to a file),
-    or directly an asciidata catalog object as returned by pysex
+    or directly an astropy.table catalog object as returned by pysex
 
     :param hdu: The hdu containing the science data from which I should build
                 the catalog. 0 will select the only available extension.
                 If multihdu, 1 is usually science.
 
-    We read a sextractor catalog with astroasciidata and return a list
+    We read a sextractor catalog with astropy.table and return a list
     of stars.
     Minimal fields that must be present in the catalog :
 
@@ -265,8 +265,6 @@ def readsexcat(sexcat, hdu=0, verbose=True,
     returnlist = []
 
     if isinstance(sexcat, str):
-
-        import asciidata
         if not os.path.isfile(sexcat):
             print("Sextractor catalog does not exist :")
             print(sexcat)
@@ -274,25 +272,27 @@ def readsexcat(sexcat, hdu=0, verbose=True,
 
         if verbose:
             print("Reading %s " % (os.path.split(sexcat)[1]))
-        mycat = asciidata.open(sexcat)
 
-    else:  # then it's already a asciidata object
+        mycat = astropy.table.Table.read(sexcat,
+                                         format="ascii.sextractor")
+
+    else:  # then it's already a astropy.table object
         mycat = sexcat
 
     # We check for the presence of required fields :
     minimalfields = ["NUMBER", "X_IMAGE", "Y_IMAGE", "FWHM_IMAGE",
                      "ELONGATION", "FLUX_AUTO", "FLAGS", "EXT_NUMBER"]
     minimalfields.extend(propfields)
-    availablefields = [col.colname for col in mycat]
+    availablefields = mycat.colnames
     for field in minimalfields:
         if field not in availablefields:
             print("Field %s not available in your catalog file !" % (field))
             sys.exit(1)
 
     if verbose:
-        print("Number of sources in catalog : %i" % (mycat.nrows))
+        print("Number of sources in catalog : %i" % (len(mycat)))
 
-    extnumbers = np.unique(mycat['EXT_NUMBER'].tonumpy())
+    extnumbers = np.unique(np.array(mycat['EXT_NUMBER']))
     if verbose:
         print("EXT_NUMBER values found in catalog : %s" %
               (", ".join(["%i" % val for val in extnumbers])))
@@ -305,7 +305,7 @@ def readsexcat(sexcat, hdu=0, verbose=True,
     propfields.append("FLAGS")
     propfields = list(set(propfields))
 
-    if mycat.nrows == 0:
+    if len(mycat) == 0:
         if verbose:
             print("No stars in the catalog :-(")
     else:
